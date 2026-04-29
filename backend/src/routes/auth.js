@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
@@ -16,36 +17,24 @@ const prisma = new PrismaClient({ adapter });
 router.post('/register', async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
-
     if (existingUser) {
       return res.status(400).json({
         success: false,
         message: 'User already exists!'
       });
     }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
     const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword
-      }
+      data: { email, password: hashedPassword }
     });
-
     res.status(201).json({
       success: true,
       message: 'User registered successfully!',
       data: { id: user.id, email: user.email }
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -59,42 +48,32 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email }
     });
-
     if (!user) {
       return res.status(400).json({
         success: false,
         message: 'Invalid credentials!'
       });
     }
-
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(400).json({
         success: false,
         message: 'Invalid credentials!'
       });
     }
-
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET || 'secret123',
       { expiresIn: '7d' }
     );
-
     res.json({
       success: true,
       message: 'Login successful!',
       token
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,

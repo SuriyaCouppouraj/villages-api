@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
@@ -14,25 +15,11 @@ const prisma = new PrismaClient({ adapter });
 router.get('/states', async (req, res) => {
   try {
     const states = await prisma.state.findMany({
-      select: {
-        id: true,
-        name: true,
-        code: true
-      }
+      select: { id: true, name: true, code: true }
     });
-
-    res.json({
-      success: true,
-      count: states.length,
-      data: states
-    });
-
+    res.json({ success: true, count: states.length, data: states });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server error!',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error!', error: error.message });
   }
 });
 
@@ -40,28 +27,13 @@ router.get('/states', async (req, res) => {
 router.get('/states/:stateId/districts', async (req, res) => {
   try {
     const { stateId } = req.params;
-
     const districts = await prisma.district.findMany({
       where: { stateId: parseInt(stateId) },
-      select: {
-        id: true,
-        name: true,
-        code: true
-      }
+      select: { id: true, name: true, code: true }
     });
-
-    res.json({
-      success: true,
-      count: districts.length,
-      data: districts
-    });
-
+    res.json({ success: true, count: districts.length, data: districts });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server error!',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error!', error: error.message });
   }
 });
 
@@ -69,28 +41,13 @@ router.get('/states/:stateId/districts', async (req, res) => {
 router.get('/districts/:districtId/subdistricts', async (req, res) => {
   try {
     const { districtId } = req.params;
-
     const subDistricts = await prisma.subDistrict.findMany({
       where: { districtId: parseInt(districtId) },
-      select: {
-        id: true,
-        name: true,
-        code: true
-      }
+      select: { id: true, name: true, code: true }
     });
-
-    res.json({
-      success: true,
-      count: subDistricts.length,
-      data: subDistricts
-    });
-
+    res.json({ success: true, count: subDistricts.length, data: subDistricts });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server error!',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error!', error: error.message });
   }
 });
 
@@ -98,28 +55,13 @@ router.get('/districts/:districtId/subdistricts', async (req, res) => {
 router.get('/subdistricts/:subDistrictId/villages', async (req, res) => {
   try {
     const { subDistrictId } = req.params;
-
     const villages = await prisma.village.findMany({
       where: { subDistrictId: parseInt(subDistrictId) },
-      select: {
-        id: true,
-        name: true,
-        code: true
-      }
+      select: { id: true, name: true, code: true }
     });
-
-    res.json({
-      success: true,
-      count: villages.length,
-      data: villages
-    });
-
+    res.json({ success: true, count: villages.length, data: villages });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server error!',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error!', error: error.message });
   }
 });
 
@@ -127,47 +69,23 @@ router.get('/subdistricts/:subDistrictId/villages', async (req, res) => {
 router.get('/villages/search', async (req, res) => {
   try {
     const { name } = req.query;
-
     if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide a search term!'
-      });
+      return res.status(400).json({ success: false, message: 'Please provide a search term!' });
     }
-
     const villages = await prisma.village.findMany({
-      where: {
-        name: {
-          contains: name,
-          mode: 'insensitive'
-        }
-      },
+      where: { name: { contains: name, mode: 'insensitive' } },
       include: {
         subDistrict: {
           include: {
-            district: {
-              include: {
-                state: true
-              }
-            }
+            district: { include: { state: true } }
           }
         }
       },
       take: 50
     });
-
-    res.json({
-      success: true,
-      count: villages.length,
-      data: villages
-    });
-
+    res.json({ success: true, count: villages.length, data: villages });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Server error!',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error!', error: error.message });
   }
 });
 
