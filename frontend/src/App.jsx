@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "http://localhost:5000/api/v1";
+const API_URL = "https://villages-api-ecru.vercel.app/api/v1";
 
 function App() {
   const [states, setStates] = useState([]);
