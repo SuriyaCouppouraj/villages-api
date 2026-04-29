@@ -1,0 +1,174 @@
+const express = require('express');
+const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const { PrismaNeon } = require('@prisma/adapter-neon');
+const { Pool, neonConfig } = require('@neondatabase/serverless');
+const ws = require('ws');
+
+neonConfig.webSocketConstructor = ws;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaNeon(pool);
+const prisma = new PrismaClient({ adapter });
+
+// Get all states
+router.get('/states', async (req, res) => {
+  try {
+    const states = await prisma.state.findMany({
+      select: {
+        id: true,
+        name: true,
+        code: true
+      }
+    });
+
+    res.json({
+      success: true,
+      count: states.length,
+      data: states
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error!',
+      error: error.message
+    });
+  }
+});
+
+// Get districts by state
+router.get('/states/:stateId/districts', async (req, res) => {
+  try {
+    const { stateId } = req.params;
+
+    const districts = await prisma.district.findMany({
+      where: { stateId: parseInt(stateId) },
+      select: {
+        id: true,
+        name: true,
+        code: true
+      }
+    });
+
+    res.json({
+      success: true,
+      count: districts.length,
+      data: districts
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error!',
+      error: error.message
+    });
+  }
+});
+
+// Get subdistricts by district
+router.get('/districts/:districtId/subdistricts', async (req, res) => {
+  try {
+    const { districtId } = req.params;
+
+    const subDistricts = await prisma.subDistrict.findMany({
+      where: { districtId: parseInt(districtId) },
+      select: {
+        id: true,
+        name: true,
+        code: true
+      }
+    });
+
+    res.json({
+      success: true,
+      count: subDistricts.length,
+      data: subDistricts
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error!',
+      error: error.message
+    });
+  }
+});
+
+// Get villages by subdistrict
+router.get('/subdistricts/:subDistrictId/villages', async (req, res) => {
+  try {
+    const { subDistrictId } = req.params;
+
+    const villages = await prisma.village.findMany({
+      where: { subDistrictId: parseInt(subDistrictId) },
+      select: {
+        id: true,
+        name: true,
+        code: true
+      }
+    });
+
+    res.json({
+      success: true,
+      count: villages.length,
+      data: villages
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error!',
+      error: error.message
+    });
+  }
+});
+
+// Search villages by name
+router.get('/villages/search', async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a search term!'
+      });
+    }
+
+    const villages = await prisma.village.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: 'insensitive'
+        }
+      },
+      include: {
+        subDistrict: {
+          include: {
+            district: {
+              include: {
+                state: true
+              }
+            }
+          }
+        }
+      },
+      take: 50
+    });
+
+    res.json({
+      success: true,
+      count: villages.length,
+      data: villages
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error!',
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;
