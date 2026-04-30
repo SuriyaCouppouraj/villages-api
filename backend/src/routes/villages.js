@@ -8,7 +8,7 @@ const ws = require('ws');
 
 function getPrisma() {
   neonConfig.webSocketConstructor = ws;
-  const pool = new Pool({ 
+  const pool = new Pool({
     connectionString: "postgresql://neondb_owner:npg_hPUFyABHf76W@ep-shy-brook-aoy51pmk-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
   });
   const adapter = new PrismaNeon(pool);
@@ -18,6 +18,7 @@ function getPrisma() {
 // Get all states
 router.get('/states', async (req, res) => {
   try {
+    const prisma = getPrisma();
     const states = await prisma.state.findMany({
       select: { id: true, name: true, code: true }
     });
@@ -30,6 +31,7 @@ router.get('/states', async (req, res) => {
 // Get districts by state
 router.get('/states/:stateId/districts', async (req, res) => {
   try {
+    const prisma = getPrisma();
     const { stateId } = req.params;
     const districts = await prisma.district.findMany({
       where: { stateId: parseInt(stateId) },
@@ -44,6 +46,7 @@ router.get('/states/:stateId/districts', async (req, res) => {
 // Get subdistricts by district
 router.get('/districts/:districtId/subdistricts', async (req, res) => {
   try {
+    const prisma = getPrisma();
     const { districtId } = req.params;
     const subDistricts = await prisma.subDistrict.findMany({
       where: { districtId: parseInt(districtId) },
@@ -58,6 +61,7 @@ router.get('/districts/:districtId/subdistricts', async (req, res) => {
 // Get villages by subdistrict
 router.get('/subdistricts/:subDistrictId/villages', async (req, res) => {
   try {
+    const prisma = getPrisma();
     const { subDistrictId } = req.params;
     const villages = await prisma.village.findMany({
       where: { subDistrictId: parseInt(subDistrictId) },
@@ -72,6 +76,7 @@ router.get('/subdistricts/:subDistrictId/villages', async (req, res) => {
 // Search villages by name
 router.get('/villages/search', async (req, res) => {
   try {
+    const prisma = getPrisma();
     const { name } = req.query;
     if (!name) {
       return res.status(400).json({ success: false, message: 'Please provide a search term!' });
